@@ -1,0 +1,52 @@
+/* Definindo as cores da paleta */
+:root {
+  --mooca-red: #a83c3c; /* Cor principal do logo */
+  --mooca-red-dark: #8b3232; /* Um tom mais escuro para hover */
+  --mooca-bg: #fdfaf6; /* Um fundo "branco-quente" suave */
+}
+
+/* Aplicando a cor de fundo */
+body {
+  background-color: var(--mooca-bg) !important;
+}
+
+/* Sobrepondo a cor da Navbar */
+.navbar.bg-dark {
+  background-color: var(--mooca-red) !important;
+}
+
+/* Sobrepondo a cor dos botões principais */
+.btn-primary,
+.btn-success {
+  background-color: var(--mooca-red);
+  border-color: var(--mooca-red);
+}
+
+/* Cor ao passar o mouse (hover) */
+.btn-primary:hover,
+.btn-success:hover {
+  background-color: var(--mooca-red-dark);
+  border-color: var(--mooca-red-dark);
+}
+
+/* Cor dos textos e badges */
+.text-primary,
+.badge.bg-primary {
+  color: var(--mooca-red) !important;
+  background-color: var(--mooca-red) !important;
+}
+
+/* Ajuste fino no logo */
+.navbar-brand img {
+  height: 35px; /* Ajuste a altura do logo como preferir */
+}
+
+/* Ajuste para o ícone da lixeira não ser afetado pelo CSS dos botões */
+.btn-danger {
+  background-color: #dc3545; /* Cor vermelha padrão do Bootstrap */
+  border-color: #dc3545;
+}
+
+.cart-remove i {
+  pointer-events: none;
+}
