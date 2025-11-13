@@ -57,7 +57,7 @@ function incrementarItem(idDoItem) {
 
 function decrementarItem(idDoItem) {
   let carrinho = pegarCarrinho();
-  const item = carrinho.find((i) => i.id == idDoItem); // Usando ==
+  const item = carrinho.find((i) => i.id == idDoItem); 
 
   if (item && item.quantity > 1) {
     item.quantity -= 1;
