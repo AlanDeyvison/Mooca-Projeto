@@ -3,27 +3,33 @@ const endpointDaAPI = "http://localhost:3000/coffee";
 // funções carrinho(localStorage)
 function pegarCarrinho() {
   const carrinho = localStorage.getItem("cart");
+  // console.log("pegarCarrinho: String do localStorage:", carrinho); 
   return carrinho ? JSON.parse(carrinho) : []; //se cart for nulo recebe array vazia
 }
 
 function salvarCarrinho(carrinho) {
+  console.log("salvando no localStorage:", carrinho);
   localStorage.setItem("cart", JSON.stringify(carrinho)); //add ao localStorage transformando em String
   atualizarContadorCarrinho();//atualiza valor da bolinha do carrinho
 }
 
 //limpar o carrinho
 function limparCarrinho() {
+  console.log("carrinho limpo.");
   localStorage.removeItem("cart"); // remove o item
   atualizarContadorCarrinho();
 }
 
 function adicionarAoCarrinho(item) {//add ao carinho 
+  console.log("tentando adicionar:", item);
   const carrinho = pegarCarrinho();
   const itemExistente = carrinho.find((itemDoCarrinho) => itemDoCarrinho.id == item.id); // Usando ==
 
   if (itemExistente) {//aqui só encrementa pq existe
+    console.log("item já existe, incrementando quantidade.");
     itemExistente.quantity += 1;
   } else {//adciona um item novo ao carrinho
+    console.log("item novo, adicionando ao carrinho.");
     carrinho.push({
       id: item.id,
       title: item.title,
@@ -39,6 +45,7 @@ function adicionarAoCarrinho(item) {//add ao carinho
 function atualizarContadorCarrinho() {
   const carrinho = pegarCarrinho();
   const totalDeItens = carrinho.reduce((soma, item) => soma + item.quantity, 0);//somando o array
+  console.log("atualizando contagem para:", totalDeItens);
   const elementoContadorCarrinho = document.getElementById("cart-count");
   if (elementoContadorCarrinho) {
     elementoContadorCarrinho.textContent = totalDeItens;
@@ -46,34 +53,46 @@ function atualizarContadorCarrinho() {
 }
 
 function incrementarItem(idDoItem) {
+  console.log("tentando incrementar ID:", idDoItem);
   const carrinho = pegarCarrinho();
   const item = carrinho.find((i) => i.id == idDoItem); // usando == pq passei 4h nesse inferno 
   if (item) {
+    console.log("item encontrado:", item);
     item.quantity += 1;
     salvarCarrinho(carrinho);
     renderizarPaginaCarrinho();
+  } else {
+    console.error("item não encontrado com ID:", idDoItem);
   }
 }
 
 function decrementarItem(idDoItem) {
+  console.log("tentando decrementar ID:", idDoItem);
   let carrinho = pegarCarrinho();
-  const item = carrinho.find((i) => i.id == idDoItem); 
+  const item = carrinho.find((i) => i.id == idDoItem); // Usando ==
 
   if (item && item.quantity > 1) {
+    console.log("item encontrado, diminuindo quantidade.");
     item.quantity -= 1;
   } else if (item) {
+    console.log("item encontrado, removendo (quantidade era 1).");
     carrinho = carrinho.filter((i) => i.id != idDoItem); 
+  } else {
+    console.error("item não encontrado com ID:", idDoItem);
   }
   salvarCarrinho(carrinho);
   renderizarPaginaCarrinho();
 }
 
 function removerProdutoDoCarrinho(idDoItem) {
+  console.log("tentando remover ID:", idDoItem);
   if (!confirm("Tem certeza de que deseja remover este item?")) {
+    console.log("remoção cancelada pelo usuário");
     return;
   }
   let carrinho = pegarCarrinho();
   carrinho = carrinho.filter((i) => i.id != idDoItem); 
+  console.log("item removido.");
   salvarCarrinho(carrinho);
   renderizarPaginaCarrinho();
 }
@@ -82,6 +101,7 @@ function removerProdutoDoCarrinho(idDoItem) {
 //pagina
 
 function limparRoot() {
+  console.log("limparRoot: Limpando <div id='root'>.");
   const root = document.getElementById("root");
   root.innerHTML = "";
   root.className = "container my-4"; 
@@ -90,31 +110,46 @@ function limparRoot() {
 
 // pagina inicial
 async function renderizarPaginaInicial() {
-  const root = limparRoot();
-  root.classList.add("row", "row-cols-1", "row-cols-md-2", "row-cols-lg-3", "g-4");
+  console.log("renderizando página inicial");
+  const root = limparRoot(); // limpa o root
+  root.innerHTML = '<h2 class="mb-4">Nossos Cafés</h2>';
+
+  // container para a grade de produtos
+  const containerDaGrade = document.createElement("div");
+  containerDaGrade.className = "row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4";
   //add parada do bootstrap
+  
+  //  Add o container depois do título
+  root.appendChild(containerDaGrade);
 
   try {
     const dados = await buscarDados(endpointDaAPI);
+    console.log("dados da API recebidos:", dados);
     dados.forEach((item) => {
-      criarCardProduto(item, root);
+      // cria os cards dentro (não mais no root)
+      criarCardProduto(item, containerDaGrade);
     });
   } catch (erro) {
-    root.innerHTML = `<div class="alert alert-danger">Erro ao carregar os produtos. Tente novamente.</div>`;
+    // 5. se der ruim, exibe a mensagem
+    console.error("falha ao buscar dados!", erro);
+    containerDaGrade.innerHTML = `<div class="alert alert-danger">Erro ao carregar os produtos. Tente novamente.</div>`;
   }
 }
 
 //pagina do carrinho
 function renderizarPaginaCarrinho() {
+  console.log("renderizando página do carrinho...");
   const root = limparRoot();
   const carrinho = pegarCarrinho();
   root.innerHTML = `<h2 class="mb-3">Meu Carrinho</h2>`;
 
   if (carrinho.length === 0) {
+    console.log("carrinho está vazio.");
     root.innerHTML += `<p class="alert alert-info">Seu carrinho está vazio.</p>`;
     return;
   }
 
+  console.log("renderizando itens:", carrinho);
   const containerItensCarrinho = document.createElement("div");
   containerItensCarrinho.className = "mb-3";
   let total = 0;
@@ -153,10 +188,12 @@ function renderizarPaginaCarrinho() {
 
 // pagina checkout
 function renderizarPaginaCheckout() {
+  console.log("renderizando página de checkout");
   const root = limparRoot();
   const carrinho = pegarCarrinho();
 
   if (carrinho.length === 0) {
+    console.log("carrinho está vazio.");
     root.innerHTML = `
       <h2 class="mb-3">Finalizar Compra</h2>
       <p class="alert alert-warning">Seu carrinho está vazio. Adicione itens para finalizar a compra.</p>
@@ -167,6 +204,7 @@ function renderizarPaginaCheckout() {
 
   let total = 0;
   
+  console.log(" gerando resumo de itens...");
   // Resumo dos itens
   let htmlResumoItens = carrinho.map(item => {
     total += item.price * item.quantity;
@@ -181,6 +219,7 @@ function renderizarPaginaCheckout() {
     `;
   }).join("");
 
+  console.log(" renderizando formulário.");
   // HTML do formulário
   root.innerHTML = `
     <h2 class="mb-4">Finalizar Compra</h2>
@@ -236,22 +275,28 @@ function renderizarPaginaCheckout() {
 
   //add o listener de submit no formulário
   const formulario = document.getElementById("checkout-form");
+  console.log(" adicionando ao formulário.");
   formulario.addEventListener("submit", lidarComEnvioCheckout);
 }
 
 
 async function buscarDados(urlDaApi) {
+  console.log("buscando dados de:", urlDaApi);
   try {
     const resposta = await fetch(urlDaApi);
+    console.log("resposta recebida:", resposta.status);
     if (!resposta.ok) throw new Error(`Erro: ${resposta.status}`);
-    return await resposta.json();
+    const dadosJson = await resposta.json();
+    console.log("dados convertidos para JSON.");
+    return dadosJson;
   } catch (erro) {
-    console.error("Erro ao buscar os dados:", erro);
+    console.error("falha na requisição:", erro);
     throw erro;
   }
 }
 
 function criarCardProduto(dados, root) {
+  // console.log(" criando card para:", dados.title); 
   const coluna = document.createElement("div");
   coluna.className = "col";
   const card = document.createElement("div");
@@ -271,6 +316,7 @@ function criarCardProduto(dados, root) {
   
   //add listener no botão
   card.querySelector(".product-add-btn").onclick = () => {
+    console.log("adicionar ao Carrinho", dados);
     adicionarAoCarrinho(dados);
   };
   
@@ -280,6 +326,7 @@ function criarCardProduto(dados, root) {
 
 //formulario
 function lidarComEnvioCheckout(evento) {
+  console.log("formulário enviado.");
   evento.preventDefault(); //impede a recarga da pag
   const formulario = evento.target;
 
@@ -291,12 +338,14 @@ function lidarComEnvioCheckout(evento) {
   }
 
   //se for válido
+  console.log(" formulário válido. Processando compra.");
   formulario.classList.add("was-validated");
 
   
   limparCarrinho(); //limpa o carrinho no localStorage 
 
   
+  console.log("lidarComEnvioCheckout: Compra finalizada. Exibindo sucesso.");
   const root = document.getElementById("root"); //mensagem de confirmação 
   root.innerHTML = `
     <div class="alert alert-success text-center" role="alert">
@@ -313,11 +362,15 @@ function lidarComEnvioCheckout(evento) {
 //paginas
 function roteador() {
   const hash = window.location.hash;
+  console.log(" hash da URL mudou para:", hash);
   if (hash === "#cart") {
+    console.log("indo para Carrinho.");
     renderizarPaginaCarrinho();
   } else if (hash === "#checkout") {
+    console.log("indo para Checkout.");
     renderizarPaginaCheckout();
   } else {
+    console.log("indo para Home.");
     renderizarPaginaInicial();
   }
 }
@@ -325,25 +378,30 @@ function roteador() {
 window.addEventListener("hashchange", roteador);
 
 document.addEventListener("DOMContentLoaded", () => {
+  console.log("DOM: Conteúdo carregado. Iniciando script.");
   atualizarContadorCarrinho();
   roteador();
 });
 
 // botoes do checkout
 document.addEventListener("click", (evento) => {
+  // console.log("clique global detectado em:", evento.target);
   const botaoIncrementar = evento.target.closest(".cart-increment");
   const botaoDecrementar = evento.target.closest(".cart-decrement");
   const botaoRemover = evento.target.closest(".cart-remove");
 
   if (botaoIncrementar) {
+    console.log("botão de Incrementar clicado.");
     const id = parseInt(botaoIncrementar.dataset.id);
     incrementarItem(id);
   }
   if (botaoDecrementar) {
+    console.log("botão de Decrementar clicado.");
     const id = parseInt(botaoDecrementar.dataset.id);
     decrementarItem(id);
   }
   if (botaoRemover) {
+    console.log("botão de Remover clicado.");
     const id = parseInt(botaoRemover.dataset.id);
     removerProdutoDoCarrinho(id);
   }
